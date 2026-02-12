@@ -3,7 +3,7 @@ import asyncpg
 
 async def test():
     conn = await asyncpg.connect(
-        user='mechanic',
+        user='omega',
         password='tango52echo23',
         database='astronomy_db',
         host='localhost'
