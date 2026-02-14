@@ -6,11 +6,13 @@
 
 from sqlalchemy import String, Integer, Date, Text, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from datetime import date
 from app.models.base import Base, TimestampMixin
-from models.observation import Observation
-from models.celestial_body import CelestialBody
+if TYPE_CHECKING:
+    from app.models.observation import Observation
+    from app.models.celestial_body import CelestialBody
+
 
 
 class Astronomer(Base, TimestampMixin):
@@ -103,18 +105,6 @@ class Astronomer(Base, TimestampMixin):
     def observed_bodies_count(self) -> int:
         """Количество наблюдавшихся тел"""
         return len(self.observed_bodies) if self.observed_bodies else 0
-
-    @property
-    def observed_bodies_list(self) -> List[dict]:
-        """Список наблюдавшихся тел"""
-        result = []
-        for body in self.observed_bodies:
-            result.append({
-                "id": body.id,
-                "name": body.name,
-                "type": body.type.value
-            })
-        return result
 
     def __repr__(self) -> str:
         return f"<Astronomer(id={self.id}, name='{self.full_name}')>"

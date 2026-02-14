@@ -12,13 +12,13 @@ from enum import Enum
 
 # Перечисление для схемы (дублирует модель, но для валидации)
 class BodyType(str, Enum):
-    PLANET = "planet"
-    STAR = "star"
-    GALAXY = "galaxy"
-    NEBULA = "nebula"
-    COMET = "comet"
-    ASTEROID = "asteroid"
-    BLACK_HOLE = "black_hole"
+    PLANET = "PLANET"
+    STAR = "STAR"
+    GALAXY = "GALAXY"
+    NEBULA = "NEBULA"
+    COMET = "COMET"
+    ASTEROID = "ASTEROID"
+    BLACK_HOLE = "BLACK_HOLE"
 
 
 class SpectralClass(str, Enum):

@@ -7,24 +7,24 @@
 
 from sqlalchemy import String, Float, Integer, Enum as SQLEnum, ForeignKey, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from enum import Enum as PyEnum
 from app.models.base import Base, TimestampMixin
-from models.astronomer import Astronomer
-from models.observation import Observation
+if TYPE_CHECKING:
+    from app.models.astronomer import Astronomer
+    from app.models.observation import Observation
 
 
 
 # Перечисление типов небесных тел
 class BodyType(PyEnum):
-    """Типы небесных тел"""
-    PLANET = "planet"
-    STAR = "star"
-    GALAXY = "galaxy"
-    NEBULA = "nebula"
-    COMET = "comet"
-    ASTEROID = "asteroid"
-    BLACK_HOLE = "black_hole"
+    PLANET = "PLANET"
+    STAR = "STAR"
+    GALAXY = "GALAXY"
+    NEBULA = "NEBULA"
+    COMET = "COMET"
+    ASTEROID = "ASTEROID"
+    BLACK_HOLE = "BLACK_HOLE"
 
 
 # Перечисление спектральных классов звезд
@@ -178,66 +178,63 @@ class CelestialBody(Base, TimestampMixin):
 
     # ========== Вычисляемые свойства (для использования в схемах) ==========
 
-    @property
-    def parent_name(self) -> Optional[str]:
-        """
-        Название родительского тела.
+    # @property
+    # def parent_name(self) -> Optional[str]:
+    #     """
+    #     Название родительского тела.
 
-        Это вычисляемое свойство, которое возвращает имя родителя.
-        Используется в Pydantic схемах для сериализации.
+    #     Это вычисляемое свойство, которое возвращает имя родителя.
+    #     Используется в Pydantic схемах для сериализации.
 
-        Возвращает:
-            str или None: Название родителя или None, если родителя нет
-        """
-        return self.parent.name if self.parent else None
+    #     Возвращает:
+    #         str или None: Название родителя или None, если родителя нет
+    #     """
+    #     return self.parent.name if self.parent else None
 
-    @property
-    def children_count(self) -> int:
-        """
-        Количество дочерних тел.
+    # @property
+    # def children_count(self) -> int:
+    #     """
+    #     Количество дочерних тел.
 
-        Возвращает:
-            int: Количество детей (0 если нет)
-        """
-        return len(self.children) if self.children else 0
+    #     Возвращает:
+    #         int: Количество детей (0 если нет)
+    #     """
+    #     return len(self.children) if self.children else 0
 
-    @property
-    def observation_count(self) -> int:
-        """
-        Количество наблюдений этого тела.
+    # @property
+    # def observation_count(self) -> int:
+    #     """
+    #     Количество наблюдений этого тела.
 
-        Возвращает:
-            int: Количество наблюдений (0 если нет)
-        """
-        return len(self.observations) if self.observations else 0
+    #     Возвращает:
+    #         int: Количество наблюдений (0 если нет)
+    #     """
+    #     return len(self.observations) if self.observations else 0
 
-    @property
-    def observers_list(self) -> List[dict]:
-        """
-        Список астрономов, наблюдавших это тело.
+    # @property
+    # def observers_list(self) -> List[dict]:
+    #     """
+    #     Список астрономов, наблюдавших это тело.
 
-        Возвращает:
-            List[dict]: Список словарей с информацией об астрономах
-        """
-        result = []
-        for observer in self.observers:
-            result.append({
-                "id": observer.id,
-                "name": observer.full_name,
-                "institution": observer.institution
-            })
-        return result
+    #     Возвращает:
+    #         List[dict]: Список словарей с информацией об астрономах
+    #     """
+    #     result = []
+    #     for observer in self.observers:
+    #         result.append({
+    #             "id": observer.id,
+    #             "name": observer.full_name,
+    #             "institution": observer.institution
+    #         })
+    #     return result
 
     # ========== Методы для отладки и сериализации ==========
 
-    def __repr__(self) -> str:
-        """
-        Строковое представление объекта для отладки.
-
-        Возвращает:
-            str: Строка в формате <CelestialBody(id=1, name='Солнце', type=star)>
-        """
-        return f"<CelestialBody(id={self.id}, name='{self.name}', type={self.type.value})>"
+    # def __repr__(self) -> str:
+    #     """Строковое представление объекта для отладки"""
+    #     name = self.name if hasattr(self, 'name') else 'Unknown'
+    #     type_val = str(self.type) if hasattr(self, 'type') and self.type else 'Unknown'
+    #     return f"<CelestialBody(id={self.id}, name='{name}', type={type_val})>"
 
 
 # Создание дополнительных индексов

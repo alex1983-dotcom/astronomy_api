@@ -1,11 +1,10 @@
 """
-Docstring for app.database
-Database and session configuration
-Uses SQLAlchemy 2.0 with an asynchronous approach
+Конфигурация базы данных и сессии.
+
+Использует SQLAlchemy 2.0 с асинхронным подходом.
 """
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 from typing import AsyncGenerator
 import os
@@ -16,65 +15,70 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # URL подключения к базе данных
-# asyncpg - асинхронный драйвер для PostgreSQL
-# Для SQLite используем: sqlite+aiosqlite:///./astronomy.db
+
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+
 if not DATABASE_URL:
     raise RuntimeError(
-        "❌ DATABASE_URL не задан! Создай .env файл или установи переменную окружения."
-        )
+        "❌ DATABASE_URL не задан! "
+        "Создайте .env файл или установите переменную окружения."
+    )
+
 
 # Создание асинхронного движка (engine)
-# echo=True - выводит все SQL запросы в консоль (полезно для отладки)
-# poolclass=NullPool - отключает пул соединений (для тестов)
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,
-    future=True,  # Использовать новый стиль SQLAlchemy 2.0
+    echo=True,           # Показывать SQL запросы в консоли
+    future=True,         # Использовать новый стиль SQLAlchemy 2.0
+    poolclass=NullPool   # Отключает пул соединений (для тестов)
 )
 
 
 # Создание фабрики сессий
-AsyncSessionLocal = sessionmaker(
+AsyncSessionLocal = async_sessionmaker(
     engine,
-    class_=AsyncSession,  # Ассихронная сессия
-    expire_on_commit=False,  # Объекты остаются валидными после коммита
-    autoflush=False,  # Автоматический flush отключен
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False
 )
 
 
-# Используется в маршрутах через Depends(get_db)
+# Dependency для получения сессии базы данных
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency для получения асинхронной сессии базы данных.
-    
+
     Использует контекстный менеджер для гарантии закрытия сессии.
     Даже если произойдет ошибка, сессия будет закрыта.
-    
-    Yields:
-        AsyncSession: Асинхронная сессия SQLAlchemy
+
+    Пример использования в маршруте:
+        @app.get("/items")
+        async def get_items(db: AsyncSession = Depends(get_db)):
+            ...
     """
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit() # Коммитим измения если все успешно
+            await session.commit()
         except Exception:
-            await session.rollback()  # Откатываем изменения при ошибке
+            await session.rollback()
             raise
         finally:
-            await session.close()  # Закрываем сессию
+            await session.close()
 
- 
- 
-async def ini_db():
+
+# Функция для инициализации базы данных (создание таблиц)
+async def init_db():
     """
     Инициализация базы данных: создание всех таблиц.
-    
-    Импортируем модели здесь, чтобы они были зарегистрированы в метаданных.
-    Используем run_sync для выполнения синхронной операции в асинхронном контексте.
+
+    ВАЖНО: В продакшене используйте Alembic для миграций!
     """
-    from models.base import Base
-    from models import celestial_body, astronomer, observation
+    from app.models.base import Base
+    from app.models import celestial_body, astronomer, observation, user
+
 
     async with engine.begin() as conn:
         # Создаем все таблицы определяемые в метаданных

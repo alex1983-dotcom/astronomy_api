@@ -6,6 +6,7 @@ from app.models.base import Base, TimestampMixin
 from app.models.celestial_body import CelestialBody, BodyType, SpectralClass
 from app.models.astronomer import Astronomer
 from app.models.observation import Observation
+from app.models.user import User
 
 __all__ = [
     "Base",
@@ -14,5 +15,6 @@ __all__ = [
     "BodyType",
     "SpectralClass",
     "Astronomer",
-    "Observation"
+    "Observation",
+    "User"
 ]

@@ -6,11 +6,12 @@
 
 from sqlalchemy import String, Text, DateTime, Integer, Float, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from datetime import datetime
 from app.models.base import Base, TimestampMixin
-from models.astronomer import Astronomer
-from models.celestial_body import CelestialBody
+if TYPE_CHECKING:
+    from app.models.astronomer import Astronomer
+    from app.models.celestial_body import CelestialBody
 
 
 
