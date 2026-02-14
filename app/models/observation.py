@@ -1,80 +1,88 @@
+"""
+Модель наблюдений астрономов за небесными телами.
+
+Промежуточная таблица для связи многие-ко-многим.
+"""
+
 from sqlalchemy import String, Text, DateTime, Integer, Float, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
 from datetime import datetime
-from .base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin
 from models.astronomer import Astronomer
 from models.celestial_body import CelestialBody
+
 
 
 class Observation(Base, TimestampMixin):
     """
     Модель наблюдения.
-    
+
     Связывает астронома с небесным телом и содержит детали наблюдения.
     Это промежуточная таблица для связи многие-ко-многим.
     """
-    
+
     __tablename__ = "observations"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True,
+        autoincrement=True
+    )
+
     # Внешний ключ на астронома
     astronomer_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("astronomers.id", ondelete="CASCADE"),
-        nullable=True,
+        nullable=False,
         index=True
     )
-    
+
     # Внешний ключ на небесное тело
     celestial_body_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("celestial_bodies_id", ondelete="CASCADE"),
+        ForeignKey("celestial_bodies.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
-    obsevation_date: Mapped[datetime] = mapped_column(
+
+    # Дата и время наблюдения
+    observation_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        index=True,
-        comment="Дата и время наблюдения"
+        index=True
     )
-    
-    location: Mapped[Optional[str]] = mapped_column(
-        String(200), 
-        comment="Место наблюдения (абсерватория)"
-    )
-    equipment: Mapped[Optional[str]] = mapped_column(
-        String(200), 
-        comment="Используемое оборудование"
-    )
-    duration_hours: Mapped[Optional[float]] = mapped_column(
-        Float,
-        comment="Продолжительно наблюдения в часах"
-    )
-    weather_conditions: Mapped[Optional[str]] = mapped_column(
-        String(100), 
-        comment="Погодные условия"
-    )
-    notes: Mapped[Optional[str]] = mapped_column(
-        Text, 
-        comment="Заметки и комментарии"
-    )
-    data_collected: Mapped[Optional[str]] = mapped_column(
-        Text, 
-        comment="Научные данные"
-    )
-    
-    
-    # Связи relationship()
+
+    # Место наблюдения (обсерватория)
+    location: Mapped[Optional[str]] = mapped_column(String(200))
+
+    # Используемое оборудование
+    equipment: Mapped[Optional[str]] = mapped_column(String(200))
+
+    # Продолжительность наблюдения в часах
+    duration_hours: Mapped[Optional[float]] = mapped_column(Float)
+
+    # Погодные условия
+    weather_conditions: Mapped[Optional[str]] = mapped_column(String(100))
+
+    # Заметки и комментарии
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+
+    # Научные данные
+    data_collected: Mapped[Optional[str]] = mapped_column(Text)
+
+    # Связь с астрономом
     astronomer: Mapped["Astronomer"] = relationship(
         "Astronomer",
         back_populates="observations",
         lazy="joined"
     )
+
+    # Связь с небесным телом
     celestial_body: Mapped["CelestialBody"] = relationship(
-        "CelestionBody",
-        back_populates="observatrions",
+        "CelestialBody",
+        back_populates="observations",
         lazy="joined"
     )
 
@@ -84,6 +92,18 @@ class Observation(Base, TimestampMixin):
         Index("idx_astronomer_celestial", "astronomer_id", "celestial_body_id"),
     )
 
+    # ========== Вычисляемые свойства ==========
+
+    @property
+    def astronomer_name(self) -> Optional[str]:
+        """Имя астронома"""
+        return self.astronomer.full_name if self.astronomer else None
+
+    @property
+    def celestial_body_name(self) -> Optional[str]:
+        """Название небесного тела"""
+        return self.celestial_body.name if self.celestial_body else None
+
     def __repr__(self) -> str:
         return (
             f"<Observation(id={self.id}, "
@@ -92,21 +112,5 @@ class Observation(Base, TimestampMixin):
             f"date={self.observation_date})>"
         )
     
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "astronomer_id": self.astronomer_id,
-            "astronomer_name": self.astronomer.full_name if self.astronomer else None,
-            "celestial_body_id": self.celestial_body_id,
-            "celestial_body_name": self.celestial_body.name if self.celestial_body else None,
-            "observation_date": self.observation_date.isoformat() if self.observation_date else None,
-            "location": self.location,
-            "equipment": self.equipment,
-            "duration_hours": self.duration_hours,
-            "weather_conditions": self.weather_conditions,
-            "notes": self.notes,
-            "data_collected": self.data_collected,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
-    
+
+
